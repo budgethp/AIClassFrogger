@@ -7,11 +7,10 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import numpy as np
 import asyncio
-import tk_async_execute as tae
 runLoop = True
 action = 0
 
-env = gym.make("ALE/Frogger-v5", render_mode='rgb_array', frameskip=2)
+env = gym.make("ALE/Frogger-v5", render_mode='rgb_array', frameskip=1)
 
 initial_state = env.reset()
 
@@ -19,16 +18,26 @@ initial_state = env.reset()
 def run_action():
     global env
     global action
+    global frameCounter
     # Take a step (0: NOTHING, 1: UP, 2: RIGHT, 3: LEFT, 4: DOWN)
     new_state, reward, terminated, truncated, info = env.step(action)
     print(action)
 
-    return env.render()
+    render = env.render()
+
+    frameCounter.delete("1.0", tk.END)
+    frameCounter.insert(
+        index= '1.0', 
+        chars= str(info['frame_number'])
+    )
+
+    return render
 
 def update_image():
+    global PIL_image
     global label1
     PIL_image = Image.fromarray(np.uint8(run_action())).convert('RGB')
-    tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*2, PIL_image.height*2)))
+    tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*3, PIL_image.height*3)))
     label1.configure(image=tk_image)
     label1.image = tk_image
 
@@ -36,10 +45,11 @@ def update_image():
 def update_image_continue():
     global label1
     global runLoop
+    global PIL_image
 
 
     PIL_image = Image.fromarray(np.uint8(run_action())).convert('RGB')
-    tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*2, PIL_image.height*2)))
+    tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*3, PIL_image.height*3)))
     label1.configure(image=tk_image)
     label1.image = tk_image
     if runLoop:
@@ -72,46 +82,42 @@ def quit_program():
 def up(no):
     global action
     action = 1
-    update_image()
+    for x in range(2): #generate 4 frames running the action because this game sucks ass
+        update_image()
     action = 0
-    update_image()
 
 def down(no):
     global action
     action = 4
-    update_image()
+    for x in range(2):
+        update_image()
     action = 0
-    update_image()
 
 def left(no):
     global action
     action = 3
-    update_image()
+    for x in range(2):
+        update_image()
     action = 0
-    update_image()
 
 def right(no):
     global action
     action = 2
-    update_image()
+    for x in range(2):
+        update_image()
     action = 0
-    update_image()
+
+def saveImage():
+    global PIL_image
+    PIL_image.save("Frogger/debugger/frog.png")
 
 
 
 
 # make the window
 root = tk.Tk()
-root.geometry("500x600")
+root.geometry("700x800")
 #root.mainloop()
-
-#convert array to PiL Image    
-PIL_image = Image.fromarray(np.uint8(run_action())).convert('RGB')
-
-tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*2, PIL_image.height*2)))
-label1 = tk.Label(image=tk_image )
-label1.place(x=0, y=0)
-
 
 # quit button
 quit = tk.Button(root, text='Stop Program', command=quit_program)
@@ -130,6 +136,26 @@ run.pack(expand=tk.FALSE, fill=tk.X, anchor="se", side="bottom")
 stop = tk.Button(root, text='Stop', command=stop_image)
 stop.pack(expand=tk.FALSE, fill=tk.X, anchor="se", side="bottom")
 
+tmp = tk.Button(root, text='Save Image as frog.png', command=saveImage)
+tmp.pack(expand=tk.FALSE, fill=tk.X, anchor="se", side="bottom")
+
+frameCounter = tk.Text(root, height=2, width=5)
+frameCounter.pack(expand=tk.FALSE, fill=tk.X, anchor="ne", side="right")
+frameCounter.insert(
+    index='1.0', 
+    chars= 'Frame Counter'
+)
+
+#convert array to PiL Image    
+PIL_image = Image.fromarray(np.uint8(run_action())).convert('RGB')
+
+tk_image = ImageTk.PhotoImage(PIL_image.resize((PIL_image.width*3, PIL_image.height*3)))
+label1 = tk.Label(image=tk_image )
+label1.place(x=0, y=0)
+
+
+
+
 
 direction = ["<Up>", "<Right>", "<Left>", "<Down>"]
 function = [up, right, left,  down]
@@ -143,7 +169,6 @@ for x in range(4):
 
 
 stop.configure(state="disabled")
-tae.start()
 root.mainloop()
 
 
