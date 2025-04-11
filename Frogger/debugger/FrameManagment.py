@@ -59,8 +59,8 @@ class FrameManagment:
         frame = self._runAction(action)
 
         if len(self.__frameArray)-1 >= self.__frameHistory:
-            #self.__frameArray = list(self.__frameArray.pop(0)) # remove the oldest frame in the list
             del self.__frameArray[0]
+
         self.__frameArray.append(frame) # Add the most recent frame to the array
 
         self.frameCounter = len(self.__frameArray)-1 # Update the frame counter to be on our current frame
